@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quiz: Leyes de Kirchhoff</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --card:#0f1a2b;
+      --accent:#00d4ff;
+      --accent2:#7cffb2;
+      --text:#e6f0ff;
+      --muted:#9fb0c9;
+      --wrong:#ff6b6b;
+      --right:#8aff9a;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg),#07101a);color:var(--text)}
+    main{max-width:900px;margin:32px auto;padding:20px}
+
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.04);padding:22px;border-radius:14px;box-shadow:0 8px 30px rgba(2,6,23,0.6)}
+
+    header{display:flex;gap:16px;align-items:center}
+    .logo{width:64px;height:64px;border-radius:10px;background:radial-gradient(circle at 30% 20%, rgba(0,212,255,0.18), transparent 25%), linear-gradient(135deg,#072033,#0a2536);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--accent);font-family:monospace}
+    h1{margin:0;font-size:20px}
+    p.lead{margin:6px 0 0;color:var(--muted);font-size:14px}
+
+    .meta{display:flex;gap:12px;margin-top:14px;align-items:center}
+    .chip{background:rgba(255,255,255,0.02);padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.03);font-size:13px;color:var(--muted)}
+
+    .question-area{margin-top:18px}
+    .question{font-size:18px;margin-bottom:14px}
+
+    .options{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .opt{background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.02));padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);cursor:pointer;user-select:none}
+    .opt:hover{transform:translateY(-3px);transition:transform .12s}
+    .opt.disabled{opacity:0.6;cursor:default;transform:none}
+    .opt .key{font-weight:700;margin-right:8px;color:var(--accent)}
+
+    .controls{display:flex;justify-content:space-between;align-items:center;margin-top:18px}
+    .btn{background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;color:#04202f;padding:8px 14px;border-radius:10px;font-weight:700;cursor:pointer}
+    .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--text)}
+
+    .result{margin-top:18px;padding:12px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);border:1px solid rgba(255,255,255,0.03)}
+    .score{font-size:20px;font-weight:700}
+
+    footer{margin-top:18px;color:var(--muted);font-size:13px;text-align:center}
+
+    @media(max-width:560px){
+      .options{grid-template-columns:1fr}
+      header{flex-direction:row}
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="card">
+      <header>
+        <div class="logo">K</div>
+        <div>
+          <h1>Quiz interactivo: Leyes de Kirchhoff (Básico)</h1>
+          <p class="lead">10 preguntas de opción múltiple sencillas. Selecciona la respuesta y presiona "Siguiente".</p>
+          <div class="meta">
+            <div class="chip">Tema: Circuitos — KCL &amp; KVL</div>
+            <div class="chip">Nivel: Básico</div>
+          </div>
+        </div>
+      </header>
+
+      <section class="question-area">
+        <div id="q-count" class="chip" style="margin-top:12px">Pregunta 1 de 10</div>
+        <div id="question" class="question">Cargando pregunta...</div>
+        <div class="options" id="options"></div>
+
+        <div class="controls">
+          <button id="prevBtn" class="btn secondary">Anterior</button>
+          <div style="display:flex;gap:8px">
+            <button id="checkBtn" class="btn secondary">Comprobar</button>
+            <button id="nextBtn" class="btn">Siguiente</button>
+          </div>
+        </div>
+
+        <div id="feedback" class="result" style="display:none"></div>
+        <div id="final" class="result" style="display:none"></div>
+      </section>
+
+      <footer>
+        Diseño: estilo técnico, paleta inspirada en equipos y placas de circuito.
+      </footer>
+    </div>
+  </main>
+
+  <script>
+    const quiz = [
+      {
+        q: "¿Qué dice la primera ley de Kirchhoff (Ley de Corrientes)?",
+        a: {text: "La suma de las corrientes que entran y salen de un nodo es cero.", correct: true},
+        b: {text: "La suma de todas las resistencias de un nodo es cero.", correct: false},
+        c: {text: "La corriente nunca cambia en un nodo.", correct: false},
+        d: {text: "La tensión en un nodo es siempre cero.", correct: false}
+      },
+      {
+        q: "¿Cómo se llama también la primera ley de Kirchhoff?",
+        a: {text: "Ley de voltajes.", correct: false},
+        b: {text: "Ley de nodos.", correct: true},
+        c: {text: "Ley de resistencias.", correct: false},
+        d: {text: "Ley de baterías.", correct: false}
+      },
+      {
+        q: "Si entran 2 A en un nodo y salen 2 A, según KCL el nodo está:",
+        a: {text: "En equilibrio.", correct: true},
+        b: {text: "Con exceso de corriente.", correct: false},
+        c: {text: "Cargando energía.", correct: false},
+        d: {text: "Con corriente negativa.", correct: false}
+      },
+      {
+        q: "¿Qué establece la segunda ley de Kirchhoff (Ley de Voltajes)?",
+        a: {text: "La suma de voltajes en una malla cerrada es cero.", correct: true},
+        b: {text: "La corriente en una resistencia es cero.", correct: false},
+        c: {text: "La tensión en un nodo es infinita.", correct: false},
+        d: {text: "La suma de resistencias siempre es cero.", correct: false}
+      },
+      {
+        q: "La segunda ley de Kirchhoff también se conoce como:",
+        a: {text: "Ley de corrientes.", correct: false},
+        b: {text: "Ley de mallas.", correct: true},
+        c: {text: "Ley de nodos.", correct: false},
+        d: {text: "Ley de capacitores.", correct: false}
+      },
+      {
+        q: "En una malla con una pila de 9 V y dos caídas de 4 V y 5 V, según KVL:",
+        a: {text: "La suma da cero.", correct: true},
+        b: {text: "La pila se destruye.", correct: false},
+        c: {text: "Siempre sobra voltaje.", correct: false},
+        d: {text: "No se puede aplicar KVL.", correct: false}
+      },
+      {
+        q: "La ley de corrientes de Kirchhoff se aplica en:",
+        a: {text: "Los nodos.", correct: true},
+        b: {text: "Las resistencias.", correct: false},
+        c: {text: "Las baterías.", correct: false},
+        d: {text: "Los capacitores.", correct: false}
+      },
+      {
+        q: "La ley de voltajes de Kirchhoff se aplica en:",
+        a: {text: "Los nodos.", correct: false},
+        b: {text: "Las mallas cerradas.", correct: true},
+        c: {text: "Los cables abiertos.", correct: false},
+        d: {text: "Los transformadores.", correct: false}
+      },
+      {
+        q: "Si en un nodo entran 3 A y salen 1 A, la corriente que falta salir es:",
+        a: {text: "2 A.", correct: true},
+        b: {text: "3 A.", correct: false},
+        c: {text: "4 A.", correct: false},
+        d: {text: "0 A.", correct: false}
+      },
+      {
+        q: "Si una pila de 12 V alimenta una resistencia de 12 V, según KVL la suma es:",
+        a: {text: "Cero.", correct: true},
+        b: {text: "12 V.", correct: false},
+        c: {text: "24 V.", correct: false},
+        d: {text: "Infinito.", correct: false}
+      }
+    ];
+
+    let index = 0;
+    const total = quiz.length;
+    const userAnswers = Array(total).fill(null);
+
+    const qCountEl = document.getElementById('q-count');
+    const qEl = document.getElementById('question');
+    const optsEl = document.getElementById('options');
+    const feedbackEl = document.getElementById('feedback');
+    const finalEl = document.getElementById('final');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const checkBtn = document.getElementById('checkBtn');
+
+    function render(){
+      qCountEl.textContent = `Pregunta ${index+1} de ${total}`;
+      const item = quiz[index];
+      qEl.textContent = item.q;
+      optsEl.innerHTML = '';
+      ['a','b','c','d'].forEach(key => {
+        const opt = document.createElement('div');
+        opt.className = 'opt';
+        if(userAnswers[index] !== null) opt.classList.add('disabled');
+        opt.dataset.key = key;
+        opt.innerHTML = `<span class="key">${key.toUpperCase()}.</span> <span class="txt">${item[key].text}</span>`;
+        opt.addEventListener('click', onChoose);
+        optsEl.appendChild(opt);
+      });
+      feedbackEl.style.display = 'none';
+      finalEl.style.display = 'none';
+      prevBtn.disabled = index === 0;
+      nextBtn.textContent = index === total-1 ? 'Terminar' : 'Siguiente';
+      if(userAnswers[index] !== null){
+        const chosen = userAnswers[index];
+        markSelection(chosen, true);
+      }
+    }
+
+    function onChoose(e){
+      if(userAnswers[index] !== null) return;
+      const key = e.currentTarget.dataset.key;
+      userAnswers[index] = key;
+      markSelection(key, false);
+    }
+
+    function markSelection(key, fromLoad){
+      const item = quiz[index];
+      Array.from(optsEl.children).forEach(el => {
+        el.classList.add('disabled');
+        if(el.dataset.key === key){
+          if(item[key].correct){
+            el.style.borderColor = 'rgba(138,255,154,0.4)';
+            el.style.boxShadow = 'inset 0 0 0 2px rgba(138,255,154,0.06)';
+          } else {
+            el.style.borderColor = 'rgba(255,107,107,0.45)';
+            el.style.opacity = '0.9';
+          }
+        }
+      });
+
+      feedbackEl.style.display = 'block';
+      if(item[key].correct){
+        feedbackEl.innerHTML = `<strong>Correcto.</strong> ${item[key].text}`;
+        feedbackEl.style.borderLeft = `4px solid var(--right)`;
+      } else {
+        const correctKey = ['a','b','c','d'].find(k => item[k].correct);
+        feedbackEl.innerHTML = `<strong>Incorrecto.</strong> Tu respuesta: <strong>${key.toUpperCase()}</strong>. Respuesta correcta: <strong>${correctKey.toUpperCase()}</strong>.`;
+        feedbackEl.style.borderLeft = `4px solid var(--wrong)`;
+      }
+
+      if(!fromLoad){
+        setTimeout(() => { if(index < total-1) goTo(index+1); else showFinal(); }, 600);
+      }
+    }
+
+    function goTo(i){
+      if(i < 0 || i >= total) return;
+      index = i;
+      render();
+    }
+
+    function showFinal(){
+      const score = userAnswers.reduce((acc, ans, i) => acc + (ans && quiz[i][ans].correct ? 1 : 0), 0);
+      finalEl.style.display = 'block';
+      finalEl.innerHTML = `<div class=\"score\">Tu puntuación: ${score} / ${total}</div><p style=\"margin-top:8px;color:var(--muted)\">Detalle: <strong>${Math.round((score/total)*100)}%</strong></p>`;
+      const review = document.createElement('div');
+      review.style.marginTop = '12px';
+      review.innerHTML = '<details><summary style="cursor:pointer">Ver resumen de respuestas</summary>';
+      const list = document.createElement('ol');
+      quiz.forEach((item,i) => {
+        const ua = userAnswers[i];
+        const correctKey = ['a','b','c','d'].find(k => item[k].correct);
+        const li = document.createElement('li');
+        li.style.margin = '8px 0';
+        li.innerHTML = `${item.q} <br><em>Tu respuesta:</em> ${ua ? ua.toUpperCase()+'. '+item[ua].text : '<em>No respondida</em>'} <br><em>Correcta:</em> ${correctKey.toUpperCase()}. ${item[correctKey].text}`;
+        list.appendChild(li);
+      });
+      review.appendChild(list);
+      review.innerHTML += '</details>';
+      finalEl.appendChild(review);
+    }
+
+    prevBtn.addEventListener('click', () => goTo(index-1));
+    nextBtn.addEventListener('click', () => {
+      if(index === total-1){
+        showFinal();
+      } else {
+        goTo(index+1);
+      }
+    });
+    checkBtn.addEventListener('click', () => {
+      if(userAnswers[index] === null){
+        alert('Selecciona una opción primero.');
+        return;
+      }
+      markSelection(userAnswers[index], true);
+    });
+
+    render();
+  </script>
+</body>
+</html>
